@@ -6,6 +6,7 @@ import axios from 'axios';
 import logo from './logo.svg';
 import './App.css';
 import Advice from './Advice'
+import LinearProgress from '@material-ui/core/LinearProgress';
 import ColoredToggleButton from './ColoredToggleButton'
 
 const branch_index = [1, 2, 3, 4, 8];
@@ -13,7 +14,7 @@ const branch_index = [1, 2, 3, 4, 8];
 
 
 function App() {
-  const [tree, setTree] = React.useState(undefined)
+  const [isLoading, setIsLoading] = React.useState(false)
   useEffect(() => {
     async function fetchData() {
       function buildTree(cols, node, index) {
@@ -31,7 +32,9 @@ function App() {
         let child_node = node[key];
         buildTree(cols, child_node, index + 1);
       }
+      setIsLoading(true)
       const result = await axios(process.env.REACT_APP_KANBEN_URL)
+      setIsLoading(false)
       let tree = {};
       result.data.sort((a,b)=>{
         return a[10] - b[10]
@@ -41,38 +44,18 @@ function App() {
       })
       console.log("reload");
       setTree(tree)
+      setQuery({ kanben_bm: '有', kanben_shape: '普通系（はんねり、バナナ、かちふと）', kanben_color: '茶色系（茶色、黄土色、こげ茶）' })
     }
     fetchData();
   }, [])
 
-  const [advices, setAdvices] = React.useState({});
-  const [kanben_bm, setBowelMovement] = React.useState('無')
-  const [kanben_shape, setShape] = React.useState('普通系（はんねり、バナナ、かちふと）')
-  const [kanben_color, setColor] = React.useState('茶色系（茶色、黄土色、こげ茶）')
-  const [toggle_shape, setShapeToggle] = React.useState(true)
-  const [toggle_color, setColorToggle] = React.useState(true)
-  const handleBowelMovement = function (event, value) {
-    if (value === null) return
-    setBowelMovement(value);
-    ask({ kanben_bm: value, kanben_shape: kanben_shape, kanben_color: kanben_color })
-  }
-  const handleShape = function (event, value) {
-    if (value === null) return
-    setShape(value);
-    ask({ kanben_bm: kanben_bm, kanben_shape: value, kanben_color: kanben_color })
-  }
-  const handleColor = function (event, value) {
-    if (value === null) return
-    setColor(value);
-    ask({ kanben_bm: kanben_bm, kanben_shape: kanben_shape, kanben_color: value })
-  }
-  function ask(kanben) {
-    if (!tree) {
+  const [tree, setTree] = React.useState(undefined)
+  const [query, setQuery] = React.useState(undefined);
+  useEffect(() => {
+    if (!tree || !query) {
       return
     }
-    const kanben_bm = kanben.kanben_bm
-    const kanben_shape = kanben.kanben_shape
-    const kanben_color = kanben.kanben_color
+    const {kanben_bm, kanben_shape, kanben_color} = query
     const shape_key = (tree[kanben_bm].length === 1 || !tree[kanben_bm][kanben_shape]) ? '__default__' : kanben_shape
     setShapeToggle(shape_key !== '__default__')
     const color_key = (tree[kanben_bm][shape_key].length === 1 || !tree[kanben_bm][shape_key][kanben_color]) ? '__default__' : kanben_color
@@ -80,6 +63,27 @@ function App() {
     console.log(kanben_bm, shape_key, color_key)
     const advices = tree[kanben_bm][shape_key][color_key]
     setAdvices(advices)
+  }, [query, tree])
+  const [advices, setAdvices] = React.useState({});
+  const [kanben_bm, setBowelMovement] = React.useState('有')
+  const [kanben_shape, setShape] = React.useState('普通系（はんねり、バナナ、かちふと）')
+  const [kanben_color, setColor] = React.useState('茶色系（茶色、黄土色、こげ茶）')
+  const [toggle_shape, setShapeToggle] = React.useState(true)
+  const [toggle_color, setColorToggle] = React.useState(true)
+  const handleBowelMovement = function (event, value) {
+    if (value === null) return
+    setBowelMovement(value);
+    setQuery({ kanben_bm: value, kanben_shape: kanben_shape, kanben_color: kanben_color })
+  }
+  const handleShape = function (event, value) {
+    if (value === null) return
+    setShape(value);
+    setQuery({ kanben_bm: kanben_bm, kanben_shape: value, kanben_color: kanben_color })
+  }
+  const handleColor = function (event, value) {
+    if (value === null) return
+    setColor(value);
+    setQuery({ kanben_bm: kanben_bm, kanben_shape: kanben_shape, kanben_color: value })
   }
 
   return (
@@ -151,7 +155,11 @@ function App() {
         </div>
       </div>
       <div>
-        <Advice src={advices} />
+        {isLoading ? (
+          <LinearProgress />
+        ) : (
+          <Advice src={advices} />
+        )}
       </div>
     </div>
   )
