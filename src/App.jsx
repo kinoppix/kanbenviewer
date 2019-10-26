@@ -12,7 +12,6 @@ function App() {
 
   const [query, setQuery] = React.useState({ kanben_bm: '有', kanben_shape: '普通系（はんねり、バナナ、かちふと）', kanben_color: '茶色系（茶色、黄土色、こげ茶）' });
 
-  const handleShapeRef = React.useRef(null)
   const [toggle_shape, setShapeToggle] = React.useState(true)
   const [toggle_color, setColorToggle] = React.useState(true)
   const handleBowelMovement = function (event, value) {
@@ -59,7 +58,7 @@ function App() {
             exclusive
             onChange={handleShape}
           >
-            <ToggleButton ref={handleShapeRef} value="ゆるい系（水様、泥状）" disabled={!toggle_shape}>
+            <ToggleButton value="ゆるい系（水様、泥状）" disabled={!toggle_shape}>
               ゆるい系
           </ToggleButton>
             <ToggleButton value="普通系（はんねり、バナナ、かちふと）" disabled={!toggle_shape}>
@@ -99,7 +98,7 @@ function App() {
         </div>
       </div>
       <div>
-        <Advice {...query} handleShape={handleShapeRef} />
+        <Advice {...query} onShapeChanged={setShapeToggle} onColorChanged={setColorToggle} />
       </div>
     </div>
   )

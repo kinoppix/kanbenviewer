@@ -14,7 +14,7 @@ const useStyles = makeStyles(theme => ({
 
 const branch_index = [1, 2, 3, 4, 8];
 
-function Advice({kanben_bm, kanben_shape, kanben_color, handleShapeRef, handleColorRef}) {
+function Advice({kanben_bm, kanben_shape, kanben_color, onShapeChanged, onColorChanged}) {
   const classes = useStyles();
 
   const [advices, setAdvices] = React.useState({})
@@ -25,14 +25,13 @@ function Advice({kanben_bm, kanben_shape, kanben_color, handleShapeRef, handleCo
       return
     }
     const shape_key = (tree[kanben_bm].length === 1 || !tree[kanben_bm][kanben_shape]) ? '__default__' : kanben_shape
-    // handleShapeRef.current.disabled = (shape_key !== '__default__')
-    // setShapeToggle(shape_key !== '__default__')
+    onShapeChanged(shape_key !== '__default__')
     const color_key = (tree[kanben_bm][shape_key].length === 1 || !tree[kanben_bm][shape_key][kanben_color]) ? '__default__' : kanben_color
-    // setColorToggle(color_key !== '__default__')
+    onColorChanged(color_key !== '__default__')
     console.log(kanben_bm, shape_key, color_key)
     const advices = tree[kanben_bm][shape_key][color_key]
     setAdvices(advices)
-  }, [kanben_bm, kanben_shape, kanben_color, handleShapeRef, tree])
+  }, [kanben_bm, kanben_shape, kanben_color, onShapeChanged, onColorChanged, tree])
 
 const readBody = useCallback(
   async (body)=>{
