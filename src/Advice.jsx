@@ -12,9 +12,11 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+// カラムのインデックス
+// 排便の有無、形、色、チェックポイント、慢性疾患
 const branch_index = [1, 2, 3, 4, 8];
 
-function Advice({kanben_bm, kanben_shape, kanben_color, onShapeChanged, onColorChanged}) {
+function Advice({ kanben_bm, kanben_shape, kanben_color, onShapeChanged, onColorChanged }) {
   const classes = useStyles();
 
   const [advices, setAdvices] = React.useState({})
@@ -33,36 +35,31 @@ function Advice({kanben_bm, kanben_shape, kanben_color, onShapeChanged, onColorC
     setAdvices(advices)
   }, [kanben_bm, kanben_shape, kanben_color, onShapeChanged, onColorChanged, tree])
 
-const readBody = useCallback(
-  async (body)=>{
-      function buildTree(cols, node, index) {
-        if (index === branch_index.length) {
-          node.push(cols);
-          return;
-        }
-        let key = cols[branch_index[index]]; // 選択肢カラムのセルの値
-        if (key === "") {
-          key = "__default__";
-        }
-        if (node[key] === undefined) {
-          node[key] = [];
-        }
-        let child_node = node[key];
-        buildTree(cols, child_node, index + 1);
-      }
+  const readBody = useCallback(
+    async (body) => {
       const data = await body.json() // ここでレスポンスの実体を取得
-      data.sort((a,b)=>{
+      data.sort((a, b) => {
         return a[10] - b[10]
       })
       let newTree = {};
-      data.forEach((val) => {
-        buildTree(val, newTree, 0)
+      // 挿入先のノードの参照を求める
+      data.forEach((cols) => {
+        const lastNode = branch_index.reduce((node, index) => {
+          const key = (cols[index] !== "") ? cols[index] : "__default__";
+          // 子ノードがなければ空ノードを作る
+          if (node[key] === undefined) {
+            node[key] = [];
+          }
+          return node[key]; //参照を返す
+        }, newTree);
+        // 参照先に要素を追加
+        lastNode.push(cols);
       })
       console.log("reload");
       setTree(newTree)
       return newTree
     }, []
-)
+  )
 
   const { loading, error, data } = useFetch(process.env.REACT_APP_KANBEN_URL, null, readBody)
   if (loading) return <LinearProgress />;
